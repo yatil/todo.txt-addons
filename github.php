@@ -6,6 +6,8 @@ define("TODODIR", $argv[1]);
 define("GITHUB", "github.txt");
 define("TODO", "todo.txt");
 
+define("NL", "\r\n");
+
 $repositories = array();
 
 $handle = fopen(TODODIR . "/" . GITHUB, "r");
@@ -78,24 +80,29 @@ function alreadyIn($issue) {
 }
 
 function addIssues($data) {
+
 	$repo = $data['repo'];
 	$rep = explode("/", $repo);
 	$owner = "@".$rep[0];
 	$name = "+".$rep[1];
 
+	echo NL.NL."=== ". $repo ." (".count($data["issues"]).") ===".NL.NL;
+
 	foreach ($data['issues'] as $issue) {
+		echo "--- ".$issue[title]." (#".$issue['number'].") [".$issue['state']."] ---".NL;
 		$already = alreadyIn($issue);
 		$ret = "";
-		if ($already) {
-			if ($issue['state'] == 'closed') {
-				passthru(escapeshellcmd("/usr/local/bin/todo.sh do $already"), $ret);
-			}
+		if ($already && ($issue['state'] == 'closed')) {
+			echo "    Issue closed, marking as done".NL;
+			passthru(escapeshellcmd("/usr/local/bin/todo.sh do $already"), $ret);
+			echo $ret.NL.NL;
+		} elseif (!$already && ($issue['state'] == 'open')) {
+				echo "    New issue, add to the list".NL;
+				passthru(escapeshellcmd("/usr/local/bin/todo.sh add ".utf8_decode($issue[title])." (#".$issue['number'].") $owner $name ".$issue['url']), $ret);
+				echo $ret.NL.NL;
 		} else {
-			if ($issue['state'] == 'open') {
-				passthru(escapeshellcmd("/usr/local/bin/todo.sh add ".utf8_decode($issue[title])." #".$issue['number']." $owner $name ".$issue['url']), $ret);
-			}
+			echo "    Issue ignored (already closed or open on the list)".NL;
 		}
-		echo $ret;
 	}
 
 }
