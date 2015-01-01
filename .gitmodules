@@ -1,3 +1,6 @@
 [submodule "todo.txt-github-sync"]
 	path = todo.txt-github-sync
 	url = https://github.com/yatil/todo.txt-github-sync.git
+	ignore = 
+	fetchRecurseSubmodules = true
+	update = checkout
